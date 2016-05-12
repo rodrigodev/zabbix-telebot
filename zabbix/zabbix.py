@@ -19,10 +19,8 @@ class Zabbix(object):
         self.zabbix = ZabbixAPI(self.server_address)
         self.zabbix.login(self.api_user, self.api_pass)
 
-    def get_hostgroup(self, params=None):
+    def get_hostgroups(self, params=None):
+        hostgroups = []
         for hostgroup in self.zabbix.hostgroup.get(params):
-            print(hostgroup)
-
-
-zabbix = Zabbix()
-zabbix.get_hostgroup('output="extend"')
+            hostgroups.append(hostgroup)
+        return hostgroups
