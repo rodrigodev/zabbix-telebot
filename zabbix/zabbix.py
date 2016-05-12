@@ -1,17 +1,28 @@
 import ConfigParser
 from pyzabbix import ZabbixAPI
 
-config = ConfigParser.ConfigParser()
-config.read('prod.cfg')
 
-zabbix_server = config.get('ZABBIX', 'SERVER')
-zabbix_api_user = config.get('ZABBIX', 'API_USER')
-zabbix_api_pass = config.get('ZABBIX', 'API_PASSWORD')
+class Zabbix(object):
+    def __init__(self):
+        self.__get_server_config()
+        self.__login()
 
-zabbix = ZabbixAPI(zabbix_server)
-zabbix.login(zabbix_api_user, zabbix_api_pass)
+    def __get_server_config(self):
+        self.config = ConfigParser.ConfigParser()
+        self.config.read('prod.cfg')
 
-print "Connected to Zabbix API Version %s" % zabbix.api_version()
+        self.server_address = self.config.get('ZABBIX', 'SERVER')
+        self.api_user = self.config.get('ZABBIX', 'API_USER')
+        self.api_pass = self.config.get('ZABBIX', 'API_PASSWORD')
 
-for hostgroup in zabbix.hostgroup.get(output="extend"):
-    print hostgroup["name"].encode("utf-8")
+    def __login(self):
+        self.zabbix = ZabbixAPI(self.server_address)
+        self.zabbix.login(self.api_user, self.api_pass)
+
+    def get_hostgroup(self, params=None):
+        for hostgroup in self.zabbix.hostgroup.get(params):
+            print(hostgroup)
+
+
+zabbix = Zabbix()
+zabbix.get_hostgroup('output="extend"')
