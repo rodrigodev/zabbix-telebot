@@ -24,3 +24,6 @@ class Zabbix(object):
         for hostgroup in self.zabbix.hostgroup.get(params):
             hostgroups.append(hostgroup)
         return hostgroups
+
+    def get_host_by_hostgroup(self, hostgroup):
+        return self.zabbix.host.get('"groupids" = {}'.format(hostgroup))

@@ -21,6 +21,9 @@ class TelegramBot(object):
         self.__updater.dispatcher.addHandler(
             CommandHandler('hostgroups', self.hostgroups))
 
+        # self.__updater.dispatcher.addHandler(
+        #     CommandHandler('host', self.host, pass_args=True))
+
         self.__updater.start_polling()
         self.__updater.idle()
 
@@ -40,4 +43,8 @@ class TelegramBot(object):
 
     def hostgroups(self, bot, update):
         bot.sendMessage(update.message.chat_id,
-                        text=self.zabb.get_hostgroups())
+                        text=self.zabb.get_hostgroups(args))
+
+    # def host(self, bot, update, args):
+    #     bot.sendMessage(update.message.chat_id,
+    #                     text=self.zabb.get_host_by_hostgroup(args))
