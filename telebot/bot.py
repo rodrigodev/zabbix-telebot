@@ -37,11 +37,13 @@ class TelegramBot(object):
         bot.sendMessage(update.message.chat_id, text='Hello World!')
 
     def hello(self, bot, update):
+        bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
                         text='Hello {0}'
                         .format(update.message.from_user.first_name))
 
     def hostgroups(self, bot, update):
+        bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
                         text=self.zabb.get_hostgroups(args))
 
