@@ -1,5 +1,8 @@
+import logging
 from telebot.bot import TelegramBot
 
-telegram_bot = TelegramBot()
+logger = logging.getLogger()
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-dir(telegram_bot)
+telegram_bot = TelegramBot()
