@@ -4,7 +4,7 @@ from pyzabbix import ZabbixAPI
 from pyzabbix import ZabbixAPI
 
 zapi = ZabbixAPI("http://10.49.10.161")
-zapi.login("dmunhoz", "wsym3k@Dighomem5nh@x")
+zapi.login("desenvolvimento", "olx123")
 
 #print "Connected to Zabbix API Version %s" % zapi.api_version()
 
