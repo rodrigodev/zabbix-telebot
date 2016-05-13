@@ -1,6 +1,10 @@
-import ConfigParser, logging, telegram
+import ConfigParser
+import logging
+import telegram
+
 from zabbix.zabbix import Zabbix
 
+from telegram.ext import Updater, CommandHandler
 from telegram import Emoji, ForceReply, InlineKeyboardButton, \
     InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, \
@@ -23,6 +27,7 @@ context = dict()
 # This dict is used to store the settings value for the chat.
 # Usually, you'd use persistence for this (e.g. sqlite).
 values = dict()
+
 
 class TelegramBot(object):
 
@@ -55,15 +60,14 @@ class TelegramBot(object):
 
         self.__updater.dispatcher.addHandler(
             CommandHandler('hostgroups', self.hostgroups))
-        #
+
         # self.__updater.dispatcher.addHandler(
         #     RegexHandler('.*', any_message))
 
+        self.__updater.dispatcher.addHandler(
+            CommandHandler('hosts', self.hosts, pass_args=True))
+
         self.__updater.dispatcher.addErrorHandler(self.error)
-
-        # self.__updater.dispatcher.addHandler(
-        #     CommandHandler('host', self.host, pass_args=True))
-
 
         self.__updater.start_polling()
         self.__updater.idle()
@@ -75,17 +79,27 @@ class TelegramBot(object):
         self.telegram_key = self.config.get('TELEGRAM', 'KEY')
 
     def hello(self, bot, update):
-        bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
+        bot.sendChatAction(chat_id=update.message.chat_id,
+                           action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
                         text='Hello {0}'
                         .format(update.message.from_user.first_name))
 
     def hostgroups(self, bot, update):
-        bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
+        bot.sendChatAction(chat_id=update.message.chat_id,
+                           action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
                         text=self.zabb.get_hostgroups())
 
-    # Example handler. Will be called on the /set command and on regular messages
+    def hosts(self, bot, update, args):
+        bot.sendChatAction(chat_id=update.message.chat_id,
+                           action=telegram.ChatAction.TYPING)
+        for host in self.zabb.get_hosts_by_hostgroup(args):
+            bot.sendMessage(update.message.chat_id,
+                            text=host)
+
+    # Example handler. Will be called on the /set
+    # command and on regular messages
     def set_value(self, bot, update):
         chat_id = update.message.chat_id
         user_id = update.message.from_user.id
@@ -114,7 +128,6 @@ class TelegramBot(object):
             bot.sendMessage(chat_id, text="Are you sure?",
                             reply_markup=reply_markup)
 
-
     def confirm_value(self, bot, update):
         query = update.callback_query
         chat_id = query.message.chat_id
@@ -130,9 +143,10 @@ class TelegramBot(object):
             bot.answerCallbackQuery(query.id, text="Ok!")
             if text == YES:
                 values[user_id] = user_context
-                bot.editMessageText(text="Changed value to %s." % values[user_id],
-                                    chat_id=chat_id,
-                                    message_id=query.message.message_id)
+                bot.editMessageText(
+                    text="Changed value to %s." % values[user_id],
+                    chat_id=chat_id,
+                    message_id=query.message.message_id)
             else:
                 bot.editMessageText(text="Alright, value is still %s."
                                          % values.get(user_id, 'not set'),
@@ -140,7 +154,8 @@ class TelegramBot(object):
                                     message_id=query.message.message_id)
 
     def help(self, bot, update):
-        bot.sendMessage(update.message.chat_id, text="Use /set to test this bot.")
+        bot.sendMessage(update.message.chat_id,
+                        text="Use /set to test this bot.")
 
     def keyboard(self, bot, update):
         custom_keyboard = [[
@@ -149,7 +164,9 @@ class TelegramBot(object):
             KeyboardButton("/hostgroups")
         ]]
         reply_markup = ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
-        bot.sendMessage(chat_id=update.message.chat_id, text="Stay here, I'll be back.", reply_markup=reply_markup)
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="Teclado de comandos ativado!",
+                        reply_markup=reply_markup)
 
     def any_message(bot, update):
         bot.sendMessage(text="Huh?")
@@ -157,7 +174,3 @@ class TelegramBot(object):
 
     def error(self, bot, update, error):
         logging.warning('Update "%s" caused error "%s"' % (update, error))
-
-    # def host(self, bot, update, args):
-    #     bot.sendMessage(update.message.chat_id,
-    #                     text=self.zabb.get_host_by_hostgroup(args))

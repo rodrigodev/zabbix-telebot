@@ -1,8 +1,12 @@
+#!/usr/bin/env python
+# coding=utf-8
+
 import ConfigParser
 from pyzabbix import ZabbixAPI
 
 
 class Zabbix(object):
+
     def __init__(self):
         self.__get_server_config()
         self.__login()
@@ -21,9 +25,13 @@ class Zabbix(object):
 
     def get_hostgroups(self, params=None):
         hostgroups = []
-        for hostgroup in self.zabbix.hostgroup.get(params):
+        for hostgroup in self.zabbix.hostgroup.get(output="extend"):
             hostgroups.append(hostgroup)
         return hostgroups
 
-    def get_host_by_hostgroup(self, hostgroup):
-        return self.zabbix.host.get('"groupids" = {}'.format(hostgroup))
+    def get_hosts_by_hostgroup(self, hostgroup):
+        return [host for host
+                in self.zabbix
+                .host.get(output="extend",
+                          groupids=['{}'
+                                    .format(hostgroup[0])])]
