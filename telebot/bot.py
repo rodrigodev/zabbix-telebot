@@ -56,7 +56,11 @@ class TelegramBot(object):
         self.__updater.dispatcher.addHandler(
             CommandHandler('hostgroups', self.hostgroups))
 
+
         self.__updater.dispatcher.addErrorHandler(self.error)
+
+        # self.__updater.dispatcher.addHandler(
+        #     CommandHandler('host', self.host, pass_args=True))
 
 
         self.__updater.start_polling()
@@ -69,11 +73,13 @@ class TelegramBot(object):
         self.telegram_key = self.config.get('TELEGRAM', 'KEY')
 
     def hello(self, bot, update):
+        bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
                         text='Hello {0}'
                         .format(update.message.from_user.first_name))
 
     def hostgroups(self, bot, update):
+        bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
                         text=self.zabb.get_hostgroups())
 
@@ -142,3 +148,7 @@ class TelegramBot(object):
 
     def error(self, bot, update, error):
         logging.warning('Update "%s" caused error "%s"' % (update, error))
+
+    # def host(self, bot, update, args):
+    #     bot.sendMessage(update.message.chat_id,
+    #                     text=self.zabb.get_host_by_hostgroup(args))
