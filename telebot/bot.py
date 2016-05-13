@@ -11,7 +11,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, \
     CallbackQueryHandler, Filters
 
 # Define the different states a chat can be in
-MENU, AWAIT_HOST, AWAIT_HOSTGROUP, AWAIT_ALERTS = range(4)
+MENU, AWAIT_HOST, AWAIT_HOSTGROUP, AWAIT_ALERTS, AWAIT_ACKNOWLEDGE = range(5)
 
 # States are saved in a dict that maps chat_id -> state
 state = dict()
@@ -69,6 +69,9 @@ class TelegramBot(object):
 
         self.__updater.dispatcher.addHandler(
             CommandHandler('triggers', self.active_triggers_click))
+
+        self.__updater.dispatcher.addHandler(
+            CommandHandler('acknowledge', self.acknowledge_click))
 
         self.__updater.dispatcher.addErrorHandler(self.error)
 
@@ -183,6 +186,27 @@ class TelegramBot(object):
                         text="getting information",
                         reply_markup=reply_markup)
 
+    @chat_action
+    def acknowledge_click(self, bot, update):
+        user_id = update.message.from_user.id
+        state[user_id] = AWAIT_ACKNOWLEDGE
+
+        for event in self.zabb.get_events():
+            prompt = "Host: {}\nEvento: {}".format(event['hosts'][0]['name'],
+                                                   event['description'])
+
+            bot.sendMessage(update.message.chat_id, text=prompt)
+
+            buttons = [[InlineKeyboardButton(
+                text="acknowledge",
+                callback_data=event['lastEvent']['eventid'])]]
+
+            reply_markup = InlineKeyboardMarkup(buttons)
+
+            bot.sendMessage(update.message.chat_id,
+                            text='Press to acknowledge it.',
+                            reply_markup=reply_markup)
+
     # support commands
 
     def help(self, bot, update):
@@ -192,6 +216,7 @@ class TelegramBot(object):
     def keyboard(self, bot, update):
         custom_keyboard = [[
             KeyboardButton("/start"),
+            KeyboardButton("/acknowledge"),
             KeyboardButton("/triggers"),
             KeyboardButton("/hostgroups")
         ]]
