@@ -120,7 +120,7 @@ class TelegramBot(object):
             errors = len(self.__get_active_triggers_by_hostgroup(item["name"]))
 
             buttons.append([InlineKeyboardButton(
-                text=item["name"] + (" ({0})".format(errors) if errors else ""),
+                text=item["name"],
                 callback_data=item["groupid"]
             )])
 
@@ -134,10 +134,15 @@ class TelegramBot(object):
     def active_triggers(self, bot, update):
         user_id = update.message.from_user.id
         state[user_id] = AWAIT_ALERTS
-        buttons = [[InlineKeyboardButton(text=item["name"],
-                                         callback_data=item["name"])]
-                   for item in self.zabb.get_hostgroups()]
+        buttons = []
 
+        for item in self.zabb.get_hostgroups():
+            errors = len(self.__get_active_triggers_by_hostgroup(item["name"]))
+            if errors:
+                buttons.append([InlineKeyboardButton(
+                    text=item["name"] + (" ({0})".format(errors)),
+                    callback_data=item["groupid"]
+                )])
         reply_markup = InlineKeyboardMarkup(buttons)
 
         bot.sendMessage(update.message.chat_id,
