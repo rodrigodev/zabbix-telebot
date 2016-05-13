@@ -1,4 +1,4 @@
-import ConfigParser, logging
+import ConfigParser, logging, telegram
 from zabbix.zabbix import Zabbix
 
 from telegram import Emoji, ForceReply, InlineKeyboardButton, \
