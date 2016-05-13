@@ -163,14 +163,14 @@ class TelegramBot(object):
             KeyboardButton("/resume"),
             KeyboardButton("/hostgroups")
         ]]
-        reply_markup = ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
+        reply_markup = ReplyKeyboardMarkup(
+            custom_keyboard, resize_keyboard=True)
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="Teclado de comandos ativado!",
                         reply_markup=reply_markup)
 
     def any_message(bot, update):
         bot.sendMessage(text="Huh?")
-
 
     def error(self, bot, update, error):
         logging.warning('Update "%s" caused error "%s"' % (update, error))
