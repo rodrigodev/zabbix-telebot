@@ -11,7 +11,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, \
     CallbackQueryHandler, Filters
 
 # Define the different states a chat can be in
-MENU, AWAIT_CONFIRMATION, AWAIT_INPUT = range(3)
+MENU, AWAIT_CONFIRMATION, AWAIT_INPUT, AWAIT_HOSTGROUP = range(4)
 
 # Python 2 and 3 unicode differences
 try:
@@ -88,8 +88,16 @@ class TelegramBot(object):
     def hostgroups(self, bot, update):
         bot.sendChatAction(chat_id=update.message.chat_id,
                            action=telegram.ChatAction.TYPING)
+
+        user_id = update.message.from_user.id
+        state[user_id] = AWAIT_HOSTGROUP
+        buttons = [[InlineKeyboardButton(text=item["name"], callback_data=item["groupid"])] for item in self.zabb.get_hostgroups()]
+
+        reply_markup = InlineKeyboardMarkup(buttons)
+        # self.zabb.get_hostgroups()
         bot.sendMessage(update.message.chat_id,
-                        text=self.zabb.get_hostgroups())
+                        text="getting information",
+                        reply_markup=reply_markup)
 
     def hosts(self, bot, update, args):
         bot.sendChatAction(chat_id=update.message.chat_id,
@@ -152,6 +160,8 @@ class TelegramBot(object):
                                          % values.get(user_id, 'not set'),
                                     chat_id=chat_id,
                                     message_id=query.message.message_id)
+        elif user_state == AWAIT_HOSTGROUP:
+            print text
 
     def help(self, bot, update):
         bot.sendMessage(update.message.chat_id,
