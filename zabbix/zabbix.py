@@ -35,3 +35,16 @@ class Zabbix(object):
                 .host.get(output="extend",
                           groupids=['{}'
                                     .format(hostgroup[0])])]
+
+    def get_active_triggers_by_hostgroup(self, hostgroup):
+        return [alert for alert
+                in self.zabbix
+                .trigger.get(output="extend",
+                             only_true=1,
+                             skipDependent=1,
+                             monitored=1,
+                             active=1,
+                             selectHosts='extend',
+                             expandDescription=1,
+                             expandData='host',
+                             group=hostgroup)]
