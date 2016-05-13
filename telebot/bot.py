@@ -65,7 +65,7 @@ class TelegramBot(object):
             CommandHandler('hostgroups', self.hostgroups_click))
 
         self.__updater.dispatcher.addHandler(
-            CommandHandler('slachat', self.sla))
+            CommandHandler('sla', self.sla))
 
         self.__updater.dispatcher.addHandler(
             CommandHandler('triggers', self.active_triggers_click))
@@ -143,10 +143,8 @@ class TelegramBot(object):
     # keyboard button calls
 
     def sla(self, bot, update):
-        bot.sendChatAction(chat_id=update.message.chat_id,
-                           action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
-                        text=self.zabb.get_slachat())
+                        text=self.zabb.get_sla())
 
     @chat_action
     def hostgroups_click(self, bot, update):

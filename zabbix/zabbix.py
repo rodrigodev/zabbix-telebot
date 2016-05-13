@@ -49,11 +49,23 @@ class Zabbix(object):
                              expandData='host',
                              group=hostgroup)]
 
-    def get_slachat(self, params=None):
+    def get_sla(self, params=None):
+        services = self.zabbix.service.get(output="extend", selectDependencies="extend")
+        service_list = json.loads(json.dumps(services))
+        response = ""
         timestampnow = time.time()
-        j = json.loads(json.dumps(self.zabbix.service.getsla(output="extended",serviceids="1",intervals=[{"from":timestampnow - 2628000,"to":timestampnow}])))
-        sla = '{} %'.format(j['1']['sla'][0]['sla'])
-        return sla
+
+        for service in service_list:
+            sla = json.loads(json.dumps(self.zabbix.service.getsla(
+                serviceids=service["serviceid"],
+                output="extend",
+                intervals=[{"from":timestampnow - 2628000,"to":timestampnow}]
+            )))
+
+            sla_percentage = str(sla[service["serviceid"]]['sla'][0]['sla'])
+            response += "\t\nSLA {} = ".format(service["name"]) + sla_percentage + "%"
+
+        return response
 
     def get_events(self):
         return [trigger for trigger
@@ -71,37 +83,3 @@ class Zabbix(object):
                          expandData='host',
                          triggerid=16083,
                          limit=1)]
-
-
-
-
-#         events = self.zabbix.event.get(output=["eventid", "relatedObject", "hosts"], sortorder='DESC', selectHosts=1, selectRelatedObject=1, limit=10)
-#
-#         result = []
-#
-#         for event in events:
-#             event_info = {}
-#
-#             event_info['eventid'] = event['eventid']
-#             event_info['host'] = [host for host in self.zabbix.host.get(output=['name', 'hostid'], hostid=event['hosts'][0]['hostid'])][0]
-#
-#
-#             if 'triggerid' in event['relatedObject'].keys():
-#                 event_info['related_object'] = [trigger for trigger
-#                         in self.zabbix
-#                         .trigger.get(output=['triggerid', 'description', 'priority'],
-#                                      triggerids=['{}'
-#                                                .format(event['relatedObject']['triggerid'])],
-#                                      expandDescription=1,
-#                                      active=1)][0]
-#
-#             result.append(event_info)
-#
-# #         print result.keys()
-# #         print result[result.keys()[0]]['host']
-# #         print result[result.keys()[0]]['related_object']
-# #
-#         return result
-#
-z = Zabbix()
-print(z.get_events())
