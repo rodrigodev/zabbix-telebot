@@ -238,7 +238,7 @@ class TelegramBot(object):
 
     def graph(self, bot, update):
         bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
-        os.system("./gimg.php")
+        os.system("../gimg.php")
         bot.sendPhoto(chat_id=update.message.chat_id, photo=open('/tmp/zabbix_graph.png','rb'))
 
     def error(self, bot, update, error):
