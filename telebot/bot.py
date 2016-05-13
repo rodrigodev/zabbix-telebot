@@ -79,6 +79,9 @@ class TelegramBot(object):
 
         self.telegram_key = self.config.get('TELEGRAM', 'KEY')
 
+    def __get_active_triggers_by_hostgroup(self, hostgroup_name):
+        return self.zabb.get_active_triggers_by_hostgroup(hostgroup_name)
+
     def help(self, bot, update):
         bot.sendMessage(update.message.chat_id,
                         text="Use /set to test this bot.")
@@ -101,9 +104,15 @@ class TelegramBot(object):
     def hostgroups(self, bot, update):
         user_id = update.message.from_user.id
         state[user_id] = AWAIT_HOSTGROUP
-        buttons = [[InlineKeyboardButton(text=item["name"],
-                                         callback_data=item["groupid"])]
-                   for item in self.zabb.get_hostgroups()]
+        buttons = []
+
+        for item in self.zabb.get_hostgroups():
+            errors = len(self.__get_active_triggers_by_hostgroup(item["name"]))
+
+            buttons.append([InlineKeyboardButton(
+                text=item["name"] + (" ({0})".format(errors) if errors else ""),
+                callback_data=item["groupid"]
+            )])
 
         reply_markup = InlineKeyboardMarkup(buttons)
 
