@@ -50,7 +50,8 @@ class Zabbix(object):
                              group=hostgroup)]
 
     def get_sla(self, params=None):
-        services = self.zabbix.service.get(output="extend", selectDependencies="extend")
+        services = self.zabbix.service.get(
+            output="extend", selectDependencies="extend")
         service_list = json.loads(json.dumps(services))
         response = ""
         timestampnow = time.time()
@@ -59,27 +60,35 @@ class Zabbix(object):
             sla = json.loads(json.dumps(self.zabbix.service.getsla(
                 serviceids=service["serviceid"],
                 output="extend",
-                intervals=[{"from":timestampnow - 2628000,"to":timestampnow}]
+                intervals=[{"from": timestampnow -
+                            2628000, "to": timestampnow}]
             )))
 
             sla_percentage = str(sla[service["serviceid"]]['sla'][0]['sla'])
-            response += "\t\nSLA {} = ".format(service["name"]) + sla_percentage + "%"
+            response += "\t\nSLA {} = ".format(
+                service["name"]) + sla_percentage + "%"
 
         return response
 
     def get_events(self):
         return [trigger for trigger
-            in self.zabbix
-            .trigger.get(output="extend",
-                         sortfield=['lastchange'],
-                         sortorder= "DESC",
-                         withUnacknowledgedEvents=1,
-                         only_true=1,
-                         monitored=1,
-                         active=1,
-                         selectHosts='extend',
-                         selectLastEvent=1,
-                         expandDescription=1,
-                         expandData='host',
-                         triggerid=16083,
-                         limit=1)]
+                in self.zabbix
+                .trigger.get(output="extend",
+                             sortfield=['lastchange'],
+                             sortorder="DESC",
+                             withUnacknowledgedEvents=1,
+                             only_true=1,
+                             monitored=1,
+                             active=1,
+                             value=1,
+                             selectHosts='extend',
+                             selectLastEvent=1,
+                             expandDescription=1,
+                             expandData='host',
+                             limit=5)]
+
+    def set_acknowledge(self, eventid, message):
+        self.zabbix.event.acknowledge(eventids=eventid, message=message)
+
+# z = Zabbix()
+# print(z.get_events())

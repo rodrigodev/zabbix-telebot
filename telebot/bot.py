@@ -11,7 +11,14 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, \
     CallbackQueryHandler, Filters
 
 # Define the different states a chat can be in
-MENU, AWAIT_HOST, AWAIT_HOSTGROUP, AWAIT_ALERTS, AWAIT_ACKNOWLEDGE = range(5)
+MENU, AWAIT_HOST, AWAIT_HOSTGROUP, AWAIT_ALERTS, AWAIT_ACKNOWLEDGE, AWAIT_ACKNOWLEDGE_CONFIRMATION = range(6)
+
+# Python 2 and 3 unicode differences
+try:
+    YES, NO = (Emoji.THUMBS_UP_SIGN.decode('utf-8'),
+               Emoji.THUMBS_DOWN_SIGN.decode('utf-8'))
+except AttributeError:
+    YES, NO = (Emoji.THUMBS_UP_SIGN, Emoji.THUMBS_DOWN_SIGN)
 
 # States are saved in a dict that maps chat_id -> state
 state = dict()
@@ -20,6 +27,8 @@ context = dict()
 # This dict is used to store the settings value for the chat.
 # Usually, you'd use persistence for this (e.g. sqlite).
 values = dict()
+
+event_keys = dict()
 
 
 def chat_action(func):
@@ -52,6 +61,9 @@ class TelegramBot(object):
 
         self.__updater.dispatcher.addHandler(
             CallbackQueryHandler(self.confirm_value))
+
+        self.__updater.dispatcher.addHandler(
+            MessageHandler([Filters.text], self.entered_value))
 
         # main functions
 
@@ -103,7 +115,7 @@ class TelegramBot(object):
         result = '{}{}'.format(head_text, '\n'.join(hosts_list))
 
         bot.sendMessage(update.message.chat_id, text=result,
-            disable_web_page_preview=True)
+                        disable_web_page_preview=True)
 
     @chat_action_args
     def hostgroups_active_triggers(self, bot, update, args):
@@ -128,19 +140,74 @@ class TelegramBot(object):
             result += '\n\n'
 
         bot.sendMessage(update.message.chat_id, text=result,
-            disable_web_page_preview=True)
+                        disable_web_page_preview=True)
+
+    @chat_action_args
+    def acknowledge_event(self, bot, update, args):
+        chat_id = update.message.chat_id
+        user_id = update.message.from_user.id
+
+        state[user_id] = AWAIT_ACKNOWLEDGE  # set the state
+        bot.sendMessage(chat_id,
+                        text="Please write the acknowledge message:",
+                        reply_markup=ForceReply())
+
+    def acknowledge_confirmation(self, bot, update):
+        query = update.callback_query
+        user_id = query.from_user.id
+        text = query.data
+        user_context = context.get(user_id, None)
+        event_key = event_keys.get(user_id, None)
+        user_state = state.get(query.from_user.id, MENU)
+
+        if user_state == AWAIT_ACKNOWLEDGE_CONFIRMATION:
+            del state[user_id]
+            del context[user_id]
+            if event_keys[user_id]:
+                del event_keys[user_id]
+
+            if text == YES:
+                values[user_id] = user_context
+
+                self.zabb.set_acknowledge(event_key, values[user_id])
+
+                bot.answerCallbackQuery(query.id, text="Acknowledge done!")
+            else:
+                bot.answerCallbackQuery(query.id, text="Acknowledge aborted!")
 
     def confirm_value(self, bot, update):
         query = update.callback_query
         update.message = query.message
+        user_id = query.from_user.id
         user_state = state.get(query.from_user.id, MENU)
 
         if user_state == AWAIT_HOSTGROUP:
             self.hosts(bot, update, query.data)
         elif user_state == AWAIT_ALERTS:
             self.hostgroups_active_triggers(bot, update, query.data)
+        elif user_state == AWAIT_ACKNOWLEDGE:
+            event_keys[user_id] = query.data
+            self.acknowledge_event(bot, update, query.data)
+        elif user_state == AWAIT_ACKNOWLEDGE_CONFIRMATION:
+            self.acknowledge_confirmation(bot, update)
 
         bot.answerCallbackQuery(query.id)
+
+    def entered_value(self, bot, update):
+        chat_id = update.message.chat_id
+        user_id = update.message.from_user.id
+        chat_state = state.get(user_id, MENU)
+
+        if chat_state == AWAIT_ACKNOWLEDGE:
+            state[user_id] = AWAIT_ACKNOWLEDGE_CONFIRMATION
+
+            # Save the user id and the answer to context
+            context[user_id] = update.message.text
+            reply_markup = InlineKeyboardMarkup(
+                [[InlineKeyboardButton(YES, callback_data=YES),
+                  InlineKeyboardButton(NO, callback_data=NO)]])
+            bot.sendMessage(chat_id, text="Are you sure?",
+                            reply_markup=reply_markup)
 
     # keyboard button calls
 
