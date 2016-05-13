@@ -11,7 +11,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, \
     CallbackQueryHandler, Filters
 
 # Define the different states a chat can be in
-MENU, AWAIT_CONFIRMATION, AWAIT_INPUT, AWAIT_HOST = range(4)
+MENU, AWAIT_CONFIRMATION, AWAIT_INPUT, AWAIT_HOST, AWAIT_HOSTGROUP = range(5)
 
 # Python 2 and 3 unicode differences
 try:
@@ -99,8 +99,17 @@ class TelegramBot(object):
 
     @chat_action
     def hostgroups(self, bot, update):
+        user_id = update.message.from_user.id
+        state[user_id] = AWAIT_HOSTGROUP
+        buttons = [[InlineKeyboardButton(text=item["name"],
+                                         callback_data=item["groupid"])]
+                   for item in self.zabb.get_hostgroups()]
+
+        reply_markup = InlineKeyboardMarkup(buttons)
+
         bot.sendMessage(update.message.chat_id,
-                        text=self.zabb.get_hostgroups())
+                        text="getting information",
+                        reply_markup=reply_markup)
 
     @chat_action
     def hosts(self, bot, update, args):
@@ -162,8 +171,10 @@ class TelegramBot(object):
                                          % values.get(user_id, 'not set'),
                                     chat_id=chat_id,
                                     message_id=query.message.message_id)
-        elif user_state == AWAIT_HOST:
-            print 'teste'
+    elif user_state == AWAIT_HOST:
+        print 'teste'
+    elif user_state == AWAIT_HOSTGROUP:
+        print text
 
     def help(self, bot, update):
         bot.sendMessage(update.message.chat_id,
@@ -196,10 +207,10 @@ class TelegramBot(object):
         state[user_id] = AWAIT_HOST
 
         keyboard_buttons = [[InlineKeyboardButton(
-                                text=host['name'],
-                                callback_data=host['hostid'])]
-                            for host
-                            in self.zabb.get_hosts_by_hostgroup(['28'])]
+            text=host['name'],
+            callback_data=host['hostid'])]
+            for host
+            in self.zabb.get_hosts_by_hostgroup(['28'])]
 
         reply_markup = InlineKeyboardMarkup(keyboard_buttons)
 
