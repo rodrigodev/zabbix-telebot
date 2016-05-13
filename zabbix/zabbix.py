@@ -3,7 +3,8 @@
 
 import ConfigParser
 from pyzabbix import ZabbixAPI
-
+import time
+import json
 
 class Zabbix(object):
 
@@ -35,7 +36,7 @@ class Zabbix(object):
                                     .format(hostgroup[0])])]
 
     def get_active_triggers_by_hostgroup(self, hostgroup):
-        return [alert for alert
+        return [trigger for trigger
                 in self.zabbix
                 .trigger.get(output=['hosts', 'description'],
                              only_true=1,
@@ -46,3 +47,9 @@ class Zabbix(object):
                              expandDescription=1,
                              expandData='host',
                              group=hostgroup)]
+
+    def get_slachat(self, params=None):
+        timestampnow = time.time()
+        j = json.loads(json.dumps(self.zabbix.service.getsla(output="extended",serviceids="1",intervals=[{"from":timestampnow - 2628000,"to":timestampnow}])))
+        sla = '{} %'.format(j['1']['sla'][0]['sla'])
+        return sla

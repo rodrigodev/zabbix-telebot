@@ -65,6 +65,9 @@ class TelegramBot(object):
             CommandHandler('hostgroups', self.hostgroups_click))
 
         self.__updater.dispatcher.addHandler(
+            CommandHandler('slachat', self.sla))
+
+        self.__updater.dispatcher.addHandler(
             CommandHandler('triggers', self.active_triggers_click))
 
         self.__updater.dispatcher.addErrorHandler(self.error)
@@ -78,11 +81,14 @@ class TelegramBot(object):
 
         self.telegram_key = self.config.get('TELEGRAM', 'KEY')
 
+    def __get_active_triggers_by_hostgroup(self, hostgroup_name):
+        return self.zabb.get_active_triggers_by_hostgroup(hostgroup_name)
+
     @chat_action_args
     def hosts(self, bot, update, args):
         head_text = '//hostgroups/hosts\nHostgroup: {}\n\n'.format(args)
 
-        hosts_list = sorted(['{}\n'.format(host['name'])
+        hosts_list = sorted(['{}'.format(host['name'])
                              for host
                              in self.zabb.get_hosts_by_hostgroup([args])])
 
@@ -92,14 +98,25 @@ class TelegramBot(object):
 
     @chat_action_args
     def hostgroups_active_triggers(self, bot, update, args):
-        head_text = '//active_triggers\nHostgroup: {}\n\n'.format(args)
+        result = '//active_triggers\nHostgroup: {}\n\n'.format(args)
 
-        triggers_list = ['Host: {}\nDescription: {}'
-                         .format(trigger['hosts'][0]['host'],
-                                 trigger['description']) for trigger
-                         in self.zabb.get_active_triggers_by_hostgroup(args)]
+        triggers_by_host_list = {}
+        for trigger in self.zabb.get_active_triggers_by_hostgroup(args):
+            host = trigger['hosts'][0]['host']
 
-        result = '{}{}'.format(head_text, '\n'.join(triggers_list))
+            if(host not in triggers_by_host_list.keys()):
+                triggers_by_host_list[host] = []
+
+            triggers_by_host_list[host].append(
+                trigger['description'].encode('utf-8'))
+
+        for host in sorted(triggers_by_host_list.keys()):
+            result += 'Host: {}\n\n'.format(host)
+
+            for trigger in triggers_by_host_list[host]:
+                result += '- {}\n'.format(trigger)
+
+            result += '\n\n'
 
         bot.sendMessage(update.message.chat_id, text=result)
 
@@ -117,13 +134,23 @@ class TelegramBot(object):
 
     # keyboard button calls
 
+    def sla(self, bot, update):
+        bot.sendChatAction(chat_id=update.message.chat_id,
+                           action=telegram.ChatAction.TYPING)
+        bot.sendMessage(update.message.chat_id,
+                        text=self.zabb.get_slachat())
+
     @chat_action
     def hostgroups_click(self, bot, update):
         user_id = update.message.from_user.id
         state[user_id] = AWAIT_HOSTGROUP
-        buttons = [[InlineKeyboardButton(text=item["name"],
-                                         callback_data=item["groupid"])]
-                   for item in self.zabb.get_hostgroups()]
+        buttons = []
+
+        for item in self.zabb.get_hostgroups():
+            buttons.append([InlineKeyboardButton(
+                text=item["name"],
+                callback_data=item["groupid"]
+            )])
 
         reply_markup = InlineKeyboardMarkup(buttons)
 
@@ -135,9 +162,15 @@ class TelegramBot(object):
     def active_triggers_click(self, bot, update):
         user_id = update.message.from_user.id
         state[user_id] = AWAIT_ALERTS
-        buttons = [[InlineKeyboardButton(text=item["name"],
-                                         callback_data=item["name"])]
-                   for item in self.zabb.get_hostgroups()]
+        buttons = []
+
+        for item in self.zabb.get_hostgroups():
+            errors = len(self.__get_active_triggers_by_hostgroup(item["name"]))
+            if errors:
+                buttons.append([InlineKeyboardButton(
+                    text="{} ({})".format(item["name"], errors),
+                    callback_data=item["name"]
+                )])
 
         reply_markup = InlineKeyboardMarkup(buttons)
 
