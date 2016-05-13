@@ -171,10 +171,10 @@ class TelegramBot(object):
                                          % values.get(user_id, 'not set'),
                                     chat_id=chat_id,
                                     message_id=query.message.message_id)
-    elif user_state == AWAIT_HOST:
-        print 'teste'
-    elif user_state == AWAIT_HOSTGROUP:
-        print text
+        elif user_state == AWAIT_HOST:
+            print 'teste'
+        elif user_state == AWAIT_HOSTGROUP:
+            print text
 
     def help(self, bot, update):
         bot.sendMessage(update.message.chat_id,
