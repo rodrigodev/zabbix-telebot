@@ -66,6 +66,9 @@ class TelegramBot(object):
             CommandHandler('hostgroups', self.hostgroups))
 
         self.__updater.dispatcher.addHandler(
+            CommandHandler('slachat', self.sla))
+
+        self.__updater.dispatcher.addHandler(
             CommandHandler('active_triggers', self.active_triggers))
 
         self.__updater.dispatcher.addErrorHandler(self.error)
@@ -89,7 +92,8 @@ class TelegramBot(object):
     def keyboard(self, bot, update):
         custom_keyboard = [[
             KeyboardButton("/active_triggers"),
-            KeyboardButton("/hostgroups")
+            KeyboardButton("/hostgroups"),
+            KeyboardButton("/slachat")
         ]]
         reply_markup = ReplyKeyboardMarkup(
             custom_keyboard, resize_keyboard=True)
@@ -99,6 +103,12 @@ class TelegramBot(object):
 
     def error(self, bot, update, error):
         logging.warning('Update "%s" caused error "%s"' % (update, error))
+
+    def sla(self, bot, update):
+        bot.sendChatAction(chat_id=update.message.chat_id,
+                           action=telegram.ChatAction.TYPING)
+        bot.sendMessage(update.message.chat_id,
+                        text=self.zabb.get_slachat())
 
     @chat_action
     def hostgroups(self, bot, update):

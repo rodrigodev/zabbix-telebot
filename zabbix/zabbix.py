@@ -3,7 +3,8 @@
 
 import ConfigParser
 from pyzabbix import ZabbixAPI
-
+import time
+import json
 
 class Zabbix(object):
 
@@ -48,3 +49,9 @@ class Zabbix(object):
                              expandDescription=1,
                              expandData='host',
                              group=hostgroup)]
+
+    def get_slachat(self, params=None):
+        timestampnow = time.time()
+        j = json.loads(json.dumps(self.zabbix.service.getsla(output="extended",serviceids="1",intervals=[{"from":timestampnow - 2628000,"to":timestampnow}])))
+        sla = '{} %'.format(j['1']['sla'][0]['sla'])
+        return sla
