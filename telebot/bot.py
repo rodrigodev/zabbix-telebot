@@ -102,7 +102,8 @@ class TelegramBot(object):
 
         result = '{}{}'.format(head_text, '\n'.join(hosts_list))
 
-        bot.sendMessage(update.message.chat_id, text=result)
+        bot.sendMessage(update.message.chat_id, text=result,
+            disable_web_page_preview=True)
 
     @chat_action_args
     def hostgroups_active_triggers(self, bot, update, args):
@@ -126,7 +127,8 @@ class TelegramBot(object):
 
             result += '\n\n'
 
-        bot.sendMessage(update.message.chat_id, text=result)
+        bot.sendMessage(update.message.chat_id, text=result,
+            disable_web_page_preview=True)
 
     def confirm_value(self, bot, update):
         query = update.callback_query
@@ -144,7 +146,8 @@ class TelegramBot(object):
 
     def sla(self, bot, update):
         bot.sendMessage(update.message.chat_id,
-                        text=self.zabb.get_sla())
+                        text=self.zabb.get_sla(),
+                        disable_web_page_preview=True)
 
     @chat_action
     def hostgroups_click(self, bot, update):
@@ -162,7 +165,8 @@ class TelegramBot(object):
 
         bot.sendMessage(update.message.chat_id,
                         text="getting information",
-                        reply_markup=reply_markup)
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True)
 
     @chat_action
     def active_triggers_click(self, bot, update):
@@ -182,7 +186,8 @@ class TelegramBot(object):
 
         bot.sendMessage(update.message.chat_id,
                         text="getting information",
-                        reply_markup=reply_markup)
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True)
 
     @chat_action
     def acknowledge_click(self, bot, update):
@@ -203,7 +208,8 @@ class TelegramBot(object):
 
             bot.sendMessage(update.message.chat_id,
                             text='Press to acknowledge it.',
-                            reply_markup=reply_markup)
+                            reply_markup=reply_markup,
+                            disable_web_page_preview=True)
 
     # support commands
 
@@ -214,6 +220,7 @@ class TelegramBot(object):
     def keyboard(self, bot, update):
         custom_keyboard = [[
             KeyboardButton("/start"),
+            KeyboardButton("/sla"),
             KeyboardButton("/acknowledge"),
             KeyboardButton("/triggers"),
             KeyboardButton("/hostgroups")
@@ -222,7 +229,8 @@ class TelegramBot(object):
             custom_keyboard, resize_keyboard=True)
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="Teclado de comandos ativado!",
-                        reply_markup=reply_markup)
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True)
 
     def error(self, bot, update, error):
         logging.warning('Update "%s" caused error "%s"' % (update, error))
