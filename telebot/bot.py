@@ -291,7 +291,6 @@ class TelegramBot(object):
 
     def keyboard(self, bot, update):
         custom_keyboard = [[
-            KeyboardButton("/start"),
             KeyboardButton("/sla"),
             KeyboardButton("/acknowledge"),
             KeyboardButton("/triggers"),
