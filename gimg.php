@@ -1,7 +1,10 @@
 #!/usr/bin/php
 <?php
+
+$config = parse_ini_file("prod.cfg");
+
  //////////
- // GraphImgByID v1.1 
+ // GraphImgByID v1.1
  // (c) Travis Mathis - travisdmathis@gmail.com
  // It's free use it however you want.
  // ChangeLog:
@@ -13,9 +16,9 @@
  set_time_limit(1800);
 
  //CONFIGURATION
- $z_server = '';
- $z_user   = '';
- $z_pass   = '';
+ $z_server = $config['SERVER'];
+ $z_user   = $config['API_USER'];
+ $z_pass   = $config['API_PASSWORD'];
  $z_img_path    = "/tmp/";
 
  //NON CONFIGURABLE
@@ -23,10 +26,10 @@
  $z_url_index   = $z_server ."index.php";
  $z_url_graph   = $z_server ."chart2.php";
  $z_url_api     = $z_server ."api_jsonrpc.php";
- 
+
  // Zabbix 1.8
  // $z_login_data  = "name=" .$z_user ."&password=" .$z_pass ."&enter=Enter";
- 
+
  // Zabbix 2.0
  $z_login_data  = array('name' => $z_user, 'password' => $z_pass, 'enter' => "Sign in");
 
@@ -65,5 +68,3 @@
 
 
 GraphImageById('8421','10000','400','150');
-
-
