@@ -50,8 +50,20 @@ class Zabbix(object):
                              expandData='host',
                              group=hostgroup)]
 
-    def get_slachat(self, params=None):
+    def get_sla(self, params=None):
+        services = self.zabbix.service.get(output="extend", selectDependencies="extend")
+        service_list = json.loads(json.dumps(services))
+        response = ""
         timestampnow = time.time()
-        j = json.loads(json.dumps(self.zabbix.service.getsla(output="extended",serviceids="1",intervals=[{"from":timestampnow - 2628000,"to":timestampnow}])))
-        sla = '{} %'.format(j['1']['sla'][0]['sla'])
-        return sla
+
+        for service in service_list:
+            sla = json.loads(json.dumps(self.zabbix.service.getsla(
+                serviceids=service["serviceid"],
+                output="extend",
+                intervals=[{"from":timestampnow - 2628000,"to":timestampnow}]
+            )))
+
+            sla_percentage = str(sla[service["serviceid"]]['sla'][0]['sla'])
+            response += "\t\nSLA {} = ".format(service["name"]) + sla_percentage + "%"
+
+        return response

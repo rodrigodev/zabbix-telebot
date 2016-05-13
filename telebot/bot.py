@@ -66,7 +66,7 @@ class TelegramBot(object):
             CommandHandler('hostgroups', self.hostgroups))
 
         self.__updater.dispatcher.addHandler(
-            CommandHandler('slachat', self.sla))
+            CommandHandler('sla', self.sla))
 
         self.__updater.dispatcher.addHandler(
             CommandHandler('active_triggers', self.active_triggers))
@@ -105,10 +105,8 @@ class TelegramBot(object):
         logging.warning('Update "%s" caused error "%s"' % (update, error))
 
     def sla(self, bot, update):
-        bot.sendChatAction(chat_id=update.message.chat_id,
-                           action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
-                        text=self.zabb.get_slachat())
+                        text=self.zabb.get_sla())
 
     @chat_action
     def hostgroups(self, bot, update):
