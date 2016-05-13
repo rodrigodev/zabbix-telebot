@@ -86,7 +86,12 @@ class TelegramBot(object):
 
     @chat_action_args
     def hosts(self, bot, update, args):
-        head_text = '//hostgroups/hosts\nHostgroup: {}\n\n'.format(args)
+        hostgroup_name = [hostgroup['name']
+                          for hostgroup in self.zabb.get_hostgroups()
+                          if hostgroup['groupid'] == args][0]
+
+        head_text = '//hostgroups/hosts\nHostgroup: {}\n\n'.format(
+            hostgroup_name)
 
         hosts_list = sorted(['{}'.format(host['name'])
                              for host
