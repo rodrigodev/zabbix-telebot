@@ -228,7 +228,8 @@ class TelegramBot(object):
             KeyboardButton("/sla"),
             KeyboardButton("/acknowledge"),
             KeyboardButton("/triggers"),
-            KeyboardButton("/hostgroups")
+            KeyboardButton("/hostgroups"),
+            KeyboardButton("/graph")
         ]]
         reply_markup = ReplyKeyboardMarkup(
             custom_keyboard, resize_keyboard=True)
