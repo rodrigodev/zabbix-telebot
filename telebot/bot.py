@@ -11,7 +11,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, \
     CallbackQueryHandler, Filters
 
 # Define the different states a chat can be in
-MENU, AWAIT_CONFIRMATION, AWAIT_INPUT = range(3)
+MENU, AWAIT_CONFIRMATION, AWAIT_INPUT, AWAIT_HOST = range(4)
 
 # Python 2 and 3 unicode differences
 try:
@@ -29,6 +29,16 @@ context = dict()
 values = dict()
 
 
+def chat_action(func):
+    def print_chat_action(self, bot, update):
+        bot.sendChatAction(chat_id=update.message.chat_id,
+                           action=telegram.ChatAction.TYPING)
+
+        return func(self, bot, update)
+
+    return print_chat_action
+
+
 class TelegramBot(object):
 
     def __init__(self):
@@ -39,6 +49,9 @@ class TelegramBot(object):
 
         self.__updater.dispatcher.addHandler(
             CommandHandler('set', self.set_value))
+
+        self.__updater.dispatcher.addHandler(
+            CommandHandler('host_options', self.show_host_options))
 
         self.__updater.dispatcher.addHandler(
             MessageHandler([Filters.text], self.entered_value))
@@ -78,22 +91,19 @@ class TelegramBot(object):
 
         self.telegram_key = self.config.get('TELEGRAM', 'KEY')
 
+    @chat_action
     def hello(self, bot, update):
-        bot.sendChatAction(chat_id=update.message.chat_id,
-                           action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
                         text='Hello {0}'
                         .format(update.message.from_user.first_name))
 
+    @chat_action
     def hostgroups(self, bot, update):
-        bot.sendChatAction(chat_id=update.message.chat_id,
-                           action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
                         text=self.zabb.get_hostgroups())
 
+    @chat_action
     def hosts(self, bot, update, args):
-        bot.sendChatAction(chat_id=update.message.chat_id,
-                           action=telegram.ChatAction.TYPING)
         for host in self.zabb.get_hosts_by_hostgroup(args):
             bot.sendMessage(update.message.chat_id,
                             text=host)
@@ -152,6 +162,8 @@ class TelegramBot(object):
                                          % values.get(user_id, 'not set'),
                                     chat_id=chat_id,
                                     message_id=query.message.message_id)
+        elif user_state == AWAIT_HOST:
+            print 'teste'
 
     def help(self, bot, update):
         bot.sendMessage(update.message.chat_id,
@@ -174,3 +186,23 @@ class TelegramBot(object):
 
     def error(self, bot, update, error):
         logging.warning('Update "%s" caused error "%s"' % (update, error))
+
+    @chat_action
+    def show_host_options(self, bot, update):
+        chat_id = update.message.chat_id
+        user_id = update.message.from_user.id
+        chat_state = state.get(user_id, MENU)
+
+        state[user_id] = AWAIT_HOST
+
+        keyboard_buttons = [[InlineKeyboardButton(
+                                text=host['name'],
+                                callback_data=host['hostid'])]
+                            for host
+                            in self.zabb.get_hosts_by_hostgroup(['28'])]
+
+        reply_markup = InlineKeyboardMarkup(keyboard_buttons)
+
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="Qual host?",
+                        reply_markup=reply_markup)
