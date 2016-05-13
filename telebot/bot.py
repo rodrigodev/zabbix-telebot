@@ -1,6 +1,7 @@
 import ConfigParser
 import logging
 import telegram
+import subprocess
 import os
 
 from zabbix.zabbix import Zabbix
@@ -238,7 +239,8 @@ class TelegramBot(object):
 
     def graph(self, bot, update):
         bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
-        os.system("../gimg.php")
+        os.system("rm /tmp/zabbix_graph.png")
+        os.system("php -f ./gimg.php")
         bot.sendPhoto(chat_id=update.message.chat_id, photo=open('/tmp/zabbix_graph.png','rb'))
 
     def error(self, bot, update, error):
