@@ -16,7 +16,7 @@ $config = parse_ini_file("prod.cfg");
  set_time_limit(1800);
 
  //CONFIGURATION
- $z_server = $config['SERVER'];
+ $z_server = $config['SERVER'] . "/";
  $z_user   = $config['API_USER'];
  $z_pass   = $config['API_PASSWORD'];
  $z_img_path    = "/tmp/";
