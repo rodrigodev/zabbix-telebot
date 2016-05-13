@@ -1,7 +1,8 @@
 import ConfigParser
 from zabbix.zabbix import Zabbix
-
+import telegram
 from telegram.ext import Updater, CommandHandler
+import pdb
 
 
 class TelegramBot(object):
@@ -21,8 +22,8 @@ class TelegramBot(object):
         self.__updater.dispatcher.addHandler(
             CommandHandler('hostgroups', self.hostgroups))
 
-        # self.__updater.dispatcher.addHandler(
-        #     CommandHandler('host', self.host, pass_args=True))
+        self.__updater.dispatcher.addHandler(
+            CommandHandler('hosts', self.hosts, pass_args=True))
 
         self.__updater.start_polling()
         self.__updater.idle()
@@ -37,16 +38,21 @@ class TelegramBot(object):
         bot.sendMessage(update.message.chat_id, text='Hello World!')
 
     def hello(self, bot, update):
-        bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
+        bot.sendChatAction(chat_id=update.message.chat_id,
+                           action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
                         text='Hello {0}'
                         .format(update.message.from_user.first_name))
 
     def hostgroups(self, bot, update):
-        bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
+        bot.sendChatAction(chat_id=update.message.chat_id,
+                           action=telegram.ChatAction.TYPING)
         bot.sendMessage(update.message.chat_id,
-                        text=self.zabb.get_hostgroups(args))
+                        text=self.zabb.get_hostgroups())
 
-    # def host(self, bot, update, args):
-    #     bot.sendMessage(update.message.chat_id,
-    #                     text=self.zabb.get_host_by_hostgroup(args))
+    def hosts(self, bot, update, args):
+        bot.sendChatAction(chat_id=update.message.chat_id,
+                           action=telegram.ChatAction.TYPING)
+        for host in self.zabb.get_hosts_by_hostgroup(args):
+            bot.sendMessage(update.message.chat_id,
+                            text=host)
