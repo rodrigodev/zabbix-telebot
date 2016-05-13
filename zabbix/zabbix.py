@@ -24,22 +24,20 @@ class Zabbix(object):
         self.zabbix.login(self.api_user, self.api_pass)
 
     def get_hostgroups(self, params=None):
-        hostgroups = []
-        for hostgroup in self.zabbix.hostgroup.get(output="extend"):
-            hostgroups.append(hostgroup)
-        return hostgroups
+        return [hostgroup for hostgroup
+                in self.zabbix.hostgroup.get(output=['name', 'groupid'])]
 
     def get_hosts_by_hostgroup(self, hostgroup):
         return [host for host
                 in self.zabbix
-                .host.get(output="extend",
+                .host.get(output=['name', 'hostid'],
                           groupids=['{}'
                                     .format(hostgroup[0])])]
 
     def get_active_triggers_by_hostgroup(self, hostgroup):
         return [alert for alert
                 in self.zabbix
-                .trigger.get(output="extend",
+                .trigger.get(output=['hosts', 'description'],
                              only_true=1,
                              skipDependent=1,
                              monitored=1,
