@@ -55,7 +55,9 @@ class TelegramBot(object):
 
         self.__updater.dispatcher.addHandler(
             CommandHandler('hostgroups', self.hostgroups))
-
+        #
+        # self.__updater.dispatcher.addHandler(
+        #     RegexHandler('.*', any_message))
 
         self.__updater.dispatcher.addErrorHandler(self.error)
 
@@ -141,10 +143,17 @@ class TelegramBot(object):
         bot.sendMessage(update.message.chat_id, text="Use /set to test this bot.")
 
     def keyboard(self, bot, update):
-        custom_keyboard = [[ KeyboardButton(Emoji.THUMBS_UP_SIGN),
-        KeyboardButton(Emoji.THUMBS_DOWN_SIGN) ]]
-        reply_markup = ReplyKeyboardMarkup(custom_keyboard)
+        custom_keyboard = [[
+            KeyboardButton("/healthcheck"),
+            KeyboardButton("/resume"),
+            KeyboardButton("/hostgroups")
+        ]]
+        reply_markup = ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
         bot.sendMessage(chat_id=update.message.chat_id, text="Stay here, I'll be back.", reply_markup=reply_markup)
+
+    def any_message(bot, update):
+        bot.sendMessage(text="Huh?")
+
 
     def error(self, bot, update, error):
         logging.warning('Update "%s" caused error "%s"' % (update, error))
