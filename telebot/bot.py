@@ -62,6 +62,9 @@ class TelegramBot(object):
             CommandHandler('help', self.help))
 
         self.__updater.dispatcher.addHandler(
+            CommandHandler('graph', self.graph))
+        
+        self.__updater.dispatcher.addHandler(
             CommandHandler('hostgroups', self.hostgroups_click))
 
         self.__updater.dispatcher.addHandler(
@@ -231,6 +234,11 @@ class TelegramBot(object):
                         text="Teclado de comandos ativado!",
                         reply_markup=reply_markup,
                         disable_web_page_preview=True)
+
+    def graph(self, bot, update):
+        bot.sendChatAction(chat_id=update.message.chat_id, action=telegram.ChatAction.TYPING)
+        os.system("./gimg.php")
+        bot.sendPhoto(chat_id=update.message.chat_id, photo=open('/tmp/zabbix_graph.png','rb'))
 
     def error(self, bot, update, error):
         logging.warning('Update "%s" caused error "%s"' % (update, error))
