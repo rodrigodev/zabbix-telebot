@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import ConfigParser
+import configparser
 from pyzabbix import ZabbixAPI
 import time
 import json
@@ -14,7 +14,7 @@ class Zabbix(object):
         self.__login()
 
     def __get_server_config(self):
-        self.config = ConfigParser.ConfigParser()
+        self.config = configparser.ConfigParser()
         self.config.read('prod.cfg')
 
         self.server_address = self.config.get('ZABBIX', 'SERVER')
@@ -89,6 +89,3 @@ class Zabbix(object):
 
     def set_acknowledge(self, eventid, message):
         self.zabbix.event.acknowledge(eventids=eventid, message=message)
-
-# z = Zabbix()
-# print(z.get_events())

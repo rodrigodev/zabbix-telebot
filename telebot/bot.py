@@ -1,13 +1,12 @@
-import ConfigParser
+import configparser
 import logging
 import telegram
 import subprocess
 import os
 
 from zabbix.zabbix import Zabbix
-
 from telegram.ext import Updater, CommandHandler
-from telegram import Emoji, ForceReply, InlineKeyboardButton, \
+from telegram import ForceReply, InlineKeyboardButton, \
     InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, \
     CallbackQueryHandler, Filters
@@ -16,12 +15,8 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, \
 MENU, AWAIT_HOST, AWAIT_HOSTGROUP, AWAIT_ALERTS, AWAIT_ACKNOWLEDGE, AWAIT_ACKNOWLEDGE_CONFIRMATION = range(6)
 
 # Python 2 and 3 unicode differences
-try:
-    YES, NO = (Emoji.THUMBS_UP_SIGN.decode('utf-8'),
-               Emoji.THUMBS_DOWN_SIGN.decode('utf-8'))
-except AttributeError:
-    YES, NO = (Emoji.THUMBS_UP_SIGN, Emoji.THUMBS_DOWN_SIGN)
-
+YES = "Yes"
+NO = "No"
 # States are saved in a dict that maps chat_id -> state
 state = dict()
 # Sometimes you need to save data temporarily
@@ -96,7 +91,7 @@ class TelegramBot(object):
         self.__updater.idle()
 
     def __get_config(self):
-        self.config = ConfigParser.ConfigParser()
+        self.config = configparser.ConfigParser()
         self.config.read('prod.cfg')
 
         self.telegram_key = self.config.get('TELEGRAM', 'KEY')
